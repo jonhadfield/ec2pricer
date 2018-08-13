@@ -142,7 +142,6 @@ func GetInstancePricing(config *InstanceAppConfig) {
 	if getTypedErr != nil {
 		log.Fatal(getTypedErr)
 	}
-	//fmt.Println(pricingData)
 	outputTypeInfo(&pricingData[0])
 	for i := range pricingData {
 		item := &pricingData[i]
@@ -156,18 +155,47 @@ func GetInstancePricing(config *InstanceAppConfig) {
 		default:
 			license = item.Product.Attributes.LicenseModel
 		}
-		var productData [][]string
 
-		itemData := []string{item.Product.Attributes.OperatingSystem, item.Product.Attributes.Tenancy, item.Product.Attributes.PreInstalledSw, license}
-		productData = append(productData, itemData)
-		productTable := tablewriter.NewWriter(os.Stdout)
-		productTable.SetHeader([]string{"OS", "Tenancy", "SW", "License"})
-		productTable.SetBorders(tablewriter.Border{Left: true, Top: true, Right: true, Bottom: false})
-		productTable.SetCenterSeparator("|")
-		productTable.AppendBulk(productData) // Add Bulk Data
-		productTable.Render()
+		fmt.Printf("OS: %s | Tenancy: %s | SW: %s | License: %s\n", item.Product.Attributes.OperatingSystem,
+			item.Product.Attributes.Tenancy, item.Product.Attributes.PreInstalledSw, license)
+		//var productData [][]string
+		//
+		//itemData := []string{item.Product.Attributes.OperatingSystem, item.Product.Attributes.Tenancy, item.Product.Attributes.PreInstalledSw, license}
+		//productData = append(productData, itemData)
+		//productTable := tablewriter.NewWriter(os.Stdout)
+		//productTable.SetHeader([]string{"OS", "Tenancy", "SW", "License"})
+		//productTable.SetBorders(tablewriter.Border{Left: true, Top: true, Right: true, Bottom: false})
+		//productTable.SetCenterSeparator("|")
+		//productTable.AppendBulk(productData) // Add Bulk Data
+		//productTable.Render()
 		// output terms
 		var termsData [][]string
+
+		termsData = append(termsData)
+		//ODTermDesc := item.Terms.OnDemand
+		//fmt.Printf("%+v\n", item.Terms.OnDemand)
+		for _, term := range item.Terms.OnDemand {
+			var upFrontCost, pricePerHour awsPricingTyper.PricePerUnit
+			// loop through dimensions
+			for _, pd := range term.PriceDimensions {
+				for _, pdV := range pd {
+					if strings.ToLower(pdV.Unit) == "quantity" {
+						for _, unitPrice := range pdV.PricePerUnit {
+							upFrontCost = unitPrice
+						}
+					} else if strings.ToLower(pdV.Unit) == "hrs" {
+						for _, unitPrice := range pdV.PricePerUnit {
+							pricePerHour = unitPrice
+						}
+					}
+				}
+			}
+			termDesc := "On Demand"
+			termType := "N/A"
+			termData := []string{termDesc, termType, fmt.Sprintf("%.2f", upFrontCost["USD"]), fmt.Sprintf("%.3f", pricePerHour["USD"])}
+			termsData = append(termsData, termData)
+		}
+
 		for _, term := range item.Terms.Reserved {
 			var upFrontCost, pricePerHour awsPricingTyper.PricePerUnit
 			// loop through dimensions
@@ -200,18 +228,22 @@ func GetInstancePricing(config *InstanceAppConfig) {
 }
 
 func outputTypeInfo(doc *awsPricingTyper.PricingDocument) {
-	var productData [][]string
+	//var productData [][]string
 	fmt.Println()
-	productData = append(productData, []string{"TYPE", doc.Product.Attributes.InstanceType})
-	productData = append(productData, []string{"LOCATION", doc.Product.Attributes.Location})
+	fmt.Printf("TYPE      %s\n", doc.Product.Attributes.InstanceType)
+	fmt.Printf("LOCATION  %s\n", doc.Product.Attributes.Location)
+
+	//productData = append(productData, []string{"TYPE", doc.Product.Attributes.InstanceType})
+	//productData = append(productData, []string{"LOCATION", doc.Product.Attributes.Location})
 
 	//itemData := []string{"TYPE", doc.Product.Attributes.InstanceType}
 	//itemData := []string{"LOCATION", doc.Product.Attributes.Location}
 	//productData = append(productData, itemData)
-	productTable := tablewriter.NewWriter(os.Stdout)
-	productTable.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
-	productTable.SetCenterSeparator("|")
-	productTable.AppendBulk(productData) // Add Bulk Data
-	productTable.Render()
+	//productTable := tablewriter.NewWriter(os.Stdout)
+	//productTable.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
+	//productTable.SetCenterSeparator("|")
+	//productTable.SetBorder(false)
+	//productTable.AppendBulk(productData) // Add Bulk Data
+	//productTable.Render()
 	fmt.Println()
 }
