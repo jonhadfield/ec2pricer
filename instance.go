@@ -162,11 +162,10 @@ func GetInstancePricing(config *InstanceAppConfig) {
 		productData = append(productData, itemData)
 		productTable := tablewriter.NewWriter(os.Stdout)
 		productTable.SetHeader([]string{"OS", "Tenancy", "SW", "License"})
-		productTable.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+		productTable.SetBorders(tablewriter.Border{Left: true, Top: true, Right: true, Bottom: false})
 		productTable.SetCenterSeparator("|")
 		productTable.AppendBulk(productData) // Add Bulk Data
 		productTable.Render()
-		fmt.Println()
 		// output terms
 		var termsData [][]string
 		for _, term := range item.Terms.Reserved {
@@ -192,7 +191,7 @@ func GetInstancePricing(config *InstanceAppConfig) {
 		}
 		termsTable := tablewriter.NewWriter(os.Stdout)
 		termsTable.SetHeader([]string{"Term", "Type", "Up Front ($)", "Hourly ($)"})
-		termsTable.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+		termsTable.SetBorders(tablewriter.Border{Left: true, Top: true, Right: true, Bottom: true})
 		termsTable.SetCenterSeparator("|")
 		termsTable.AppendBulk(termsData) // Add Bulk Data
 		termsTable.Render()
@@ -201,7 +200,18 @@ func GetInstancePricing(config *InstanceAppConfig) {
 }
 
 func outputTypeInfo(doc *awsPricingTyper.PricingDocument) {
-	fmt.Printf("Type: %s\n", doc.Product.Attributes.InstanceType)
-	fmt.Printf("Location: %s\n", doc.Product.Attributes.Location)
+	var productData [][]string
+	fmt.Println()
+	productData = append(productData, []string{"TYPE", doc.Product.Attributes.InstanceType})
+	productData = append(productData, []string{"LOCATION", doc.Product.Attributes.Location})
+
+	//itemData := []string{"TYPE", doc.Product.Attributes.InstanceType}
+	//itemData := []string{"LOCATION", doc.Product.Attributes.Location}
+	//productData = append(productData, itemData)
+	productTable := tablewriter.NewWriter(os.Stdout)
+	productTable.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
+	productTable.SetCenterSeparator("|")
+	productTable.AppendBulk(productData) // Add Bulk Data
+	productTable.Render()
 	fmt.Println()
 }
