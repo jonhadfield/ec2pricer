@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/jonhadfield/aws-pricing-typer"
 	"github.com/olekukonko/tablewriter"
 )
@@ -129,6 +130,9 @@ func GetInstancePricing(config *InstanceAppConfig) {
 		})
 	}
 
+	if config.Debug {
+		fmt.Printf("Filters: %+v\n\n", getEC2InstancePriceFilters)
+	}
 	getProductsOutput, descErr := svc.GetProducts(&pricing.GetProductsInput{
 		ServiceCode:   &ec2ServiceCode,
 		FormatVersion: &formatVer,
@@ -139,10 +143,18 @@ func GetInstancePricing(config *InstanceAppConfig) {
 		os.Exit(1)
 	}
 	pricingData, getTypedErr := awsPricingTyper.GetTypedPricingData(*getProductsOutput)
+	if config.Debug {
+		spew.Dump(pricingData)
+	}
 	if getTypedErr != nil {
 		log.Fatal(getTypedErr)
 	}
-	outputTypeInfo(&pricingData[0])
+	if pricingData != nil {
+		outputTypeInfo(&pricingData[0])
+	} else {
+		fmt.Println("No results found.")
+		os.Exit(0)
+	}
 	for i := range pricingData {
 		item := &pricingData[i]
 		// Process OS value
@@ -171,7 +183,7 @@ func GetInstancePricing(config *InstanceAppConfig) {
 		// output terms
 		var termsData [][]string
 
-		termsData = append(termsData)
+		//termsData = append(termsData)
 		//ODTermDesc := item.Terms.OnDemand
 		//fmt.Printf("%+v\n", item.Terms.OnDemand)
 		for _, term := range item.Terms.OnDemand {
@@ -191,7 +203,7 @@ func GetInstancePricing(config *InstanceAppConfig) {
 				}
 			}
 			termDesc := "On Demand"
-			termType := "N/A"
+			termType := "NA"
 			termData := []string{termDesc, termType, fmt.Sprintf("%.2f", upFrontCost["USD"]), fmt.Sprintf("%.3f", pricePerHour["USD"])}
 			termsData = append(termsData, termData)
 		}

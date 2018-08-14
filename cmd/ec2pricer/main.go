@@ -68,6 +68,14 @@ func main() {
 	app.HelpName = "-"
 	app.Usage = "EC2 Pricer"
 	app.Description = ""
+	var useDebug bool
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:        "debug",
+			Usage:       "show debug output",
+			Destination: &useDebug,
+		},
+	}
 
 	app.Commands = []cli.Command{
 		{
@@ -122,16 +130,12 @@ func main() {
 					PreInstalledSw:  c.String("sw"),
 					Tenancy:         c.String("tenancy"),
 					OperatingSystem: c.String("os"),
+					Debug:           useDebug,
 				}
 				ec2pricer.GetInstancePricing(&appConfig)
 				return nil
 			},
 		},
-	}
-
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{Name: "debug"},
-		cli.StringFlag{Name: "output, o"},
 	}
 
 	sort.Sort(cli.FlagsByName(app.Flags))
